@@ -4,28 +4,106 @@ from laion_fmri.subject import load_subject
 from laion_fmri.splits import get_train_test_ids
 import numpy as np
 import pandas as pd
-
-# Load betas and trial info as usual (see laion_fmri_package/load).
-sessions = sub.get_sessions()
-betas_per_ses  = sub.get_betas(session=sessions, roi="laiongeneral")
-trials_per_ses = sub.get_trial_info(session=sessions)
-
-# Concatenate across sessions (standard idiom).
-betas  = np.concatenate(list(betas_per_ses.values()), axis=0)
-trials = pd.concat(list(trials_per_ses.values()), ignore_index=True)
-label = trials['label'] 
-
-# The things the authors of the original paper did to load the CLIP stuff
 from PIL import Image
 import requests
 from transformers import AutoProcessor, CLIPModel
+import laion_fmri
+import pickle
+import sys
+sys.path.append("../")
+sys.path.append("../../")
+
+
+import seaborn as sns
+import string
+import numpy as np
+import os
+import glob
+from os.path import join as opj
+import h5py  
+import matplotlib.pyplot as plt
+import pandas as pd
+import nibabel as nib
+from scipy.io import loadmat
+import torch
+
+from torch.utils.data import Dataset, Subset, DataLoader
+import json
+from PIL import Image
+
+from autoencoder import *
+#from torchsummary import summary
+#import torchvision
+#import tqdm
+#from sklearn.linear_model import Ridge
+import pickle
+#import wandb
+from pathlib import Path
+
+
+#from sklearn.cluster import KMeans
+#from sklearn.datasets import make_blobs
+
+#from encoding_models import *
+#from decoding import *
+#import nilearn
+#from scipy import stats
+#from nilearn import plotting
+#import matplotlib.patches as patches
+#from torch.nn import functional as F
+
+DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
+dataset_initialize(DATA_DIR)
+
+data_path = Path("/share/klab/labstudents/jmihatsch/processed_data")
+
+
+subj = 1   #making subject into variable to possibly use later as function
+subject = f"sub-0{subj}"
+processed_data = data_path / f"subj{subj:02d}"
+sub = load_subject(subject) 
+
+fmri_train_data = opj(processed_data,f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy")
+train_fmri = np.load(fmri_train_data)
+#train_fmri = (train_fmri-mean)/std
+
+fmri_test_data = opj(processed_data,f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
+test_fmri = np.load(fmri_test_data)
+#test_fmri = (test_fmri - mean)/std
+
+stim = laion_fmri.load_stimuli()
+labels_train = opj(processed_data, f"laion_train_stim_sub{subj:02d}.npy")
+labels_train = np.load(labels_train, allow_pickle=True)
+
+images_with_embeddings = []
+for label in labels_train:
+    embd = stim.embeddings.get("CLIP", label)
+    images_with_embeddings.append(embd)
+    #for each label i have saved, search for the same name in the stim and add the embedding thing to a new list
+
+images_with_embeddings = np.stack(images_with_embeddings)  #makes it into matrix
+images_with_embeddings = torch.as_tensor(images_with_embeddings, dtype=torch.float32)  #later fucntion wants it in torch style
+print(images_with_embeddings.shape)  #(4712, 1024)
+
+
+# Load betas and trial info as usual (see laion_fmri_package/load).
+# sessions = sub.get_sessions()
+# betas_per_ses  = sub.get_betas(session=sessions, roi="laiongeneral")
+# trials_per_ses = sub.get_trial_info(session=sessions)
+
+# Concatenate across sessions (standard idiom).
+# betas  = np.concatenate(list(betas_per_ses.values()), axis=0)
+# trials = pd.concat(list(trials_per_ses.values()), ignore_index=True)
+# label = trials['label'] 
+
+# The things the authors of the original paper did to load the CLIP stuff
+
 discriminator = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-subject = "sub-01" #making subject into variable to possibly use later as function
-sub = load_subject(subject) 
 #lodaing the full subject info - probably when converting into a function after doing the split train/test and avareging for each picture not needed, instead the function sould get the whole preprocessed data of a subject
-images_with_embeddings = np.concatenate([sub.metadata.image_name, sub.embeddings.all("CLIP")], axis=1) 
+#images_with_embeddings = np.concatenate([sub.metadata.image_name, sub.embeddings.all("CLIP")], axis=1) 
+
 #not sure if "image_name" would work, and the embeddings maybe better done before the preprocessing to not get confused about order, image names etc., so if doing a function that sould not be needed and the function should get data already with the embeddings 
 #this should thechnically make a matrix where each image name is paired with the embedded CLIP, so then it should be possible to find the embedding using the name
 #really unsure about what im doing here, and the stuff for some reason won't run probably because I messed up something in the terminal
@@ -45,7 +123,6 @@ for thr in [75,90,95]: #going over the same experiment with different thresholds
     outputs = {} #to collect the outputs
 
     for diff in difference_pairs: #taking each pair of concepts one by one
-        
 
         positive, negative = diff #unpacking the pair into a "positive" and a "negative" concept (that's a funny way to name it no problems whatsoever have occured historically with defining binary categories like man and woman into positive and negative)
         
@@ -56,8 +133,8 @@ for thr in [75,90,95]: #going over the same experiment with different thresholds
         probs = (images_with_embeddings@txt_embeds.T).softmax(1) #gets a matrix of embedded images and text
         pos_indices = probs[:,0].argsort()[-N:].detach().numpy() #retures the N most similar rows to the positive word (row number, so it can be used to find images)
         neg_indices = probs[:,1].argsort()[-N:].detach().numpy() #returnes the N most similar rows to the negative word
-        fmri_positive=betas[pos_indices][:N].mean(0) #avarages the brain activation pattern for all the positive concept corresponding images
-        fmri_negative=betas[neg_indices][:N].mean(0) # same for negative
+        fmri_positive=train_fmri[pos_indices][:N].mean(0) #avarages the brain activation pattern for all the positive concept corresponding images
+        fmri_negative=train_fmri[neg_indices][:N].mean(0) # same for negative
         # for replication purposes and to make sure the images actually look like they are close to the concepts, here is plotting the images. That's gonna be a lot. 
         for pert,fmri_pert in zip(diff,[fmri_positive,fmri_negative]): #gets the name of the perturbation (the concept) and the perturbation vector (avareged betas)
             print("[INFO] Running", pert) #prints out which pertrubation concept is being delt with
