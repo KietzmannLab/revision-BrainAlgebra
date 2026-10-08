@@ -30,8 +30,7 @@ def save_avg_fmri_data(subj=1):
     # Load betas and trial info as usual (see laion_fmri_package/load).
     print(f"Loading fMRI subject {subj}")
     sub = load_subject(f"sub-{subj:02d}")
-    sessions = "ses-01", "ses-02"
-
+    sessions = sub.get_sessions()
 
     #train set
     #get betas for all sessions and concatenate
@@ -65,19 +64,39 @@ def save_avg_fmri_data(subj=1):
     #img_all = np.stack(img_all, axis = 0)
     img_all = np.concatenate(img_all, axis = 0)
     print("testtest", img_all.shape)
-    #print(trials_train)
-    images_df = pd.DataFrame(img_all)
-    images_df['label'] = trials_train['label'].values
-    images_df = images_df[~images_df.index.duplicated(keep='first')]
+    print(img_all)
+    print(trials_train)
+    # trials_train_filtered = trials_train[trials_train['label'].str.startswith('unique')]
 
-    labels = avg_betas.index.to_numpy()
+    labels = trials_train['label']
+    d1 = {} 
+    d2 = {}
+    for n in range(len(labels)):
+        if labels[n].startswith('unique'):
+            d1[labels[n]] = img_all[n,:,:,:]
+        elif labels[n].startswith('shared'):
+            d2[labels[n]] = img_all[n,:,:,:]
+        else:
+            print("labels different starting characters")
 
-    train_stim =[]
-    for label in labels:
-        img = images_df.loc[label]
-        train_stim.append(img)
-    np.save(SUB_DIR / f"laion_train_stim_sub{subj:02d}.npy", train_stim)
-    print("Saved fMRI png data for train set")
+    print(d1.keys())
+    print(d2.keys())
+
+
+    #from dict unique i want order them by same order as in fmri activity thing
+    # make it into numpy array
+    labels_order = avg_betas.index.to_numpy()
+    img_data = []
+    for name in labels_order:
+        img_array = d1[name]
+        img_data.append(img_array)
+    img_data = np.stack(img_data, axis = 0)
+    print(type(img_data))
+    print(img_data.shape)
+
+    np.save(SUB_DIR / f"laion_train_stim_sub{subj:02d}.npy", img_data)
+    print("Saved img data for train set in correct order hopefully")
+
 
 '''
     #test set
@@ -105,6 +124,7 @@ def save_avg_fmri_data(subj=1):
     np.save(SUB_DIR / f"laion_test_stim_sub{subj:02d}.npy", labels_test)
     print("saved stim label for test set")
 '''
+
 save_avg_fmri_data(subj=1)
 
 
