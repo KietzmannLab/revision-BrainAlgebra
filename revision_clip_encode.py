@@ -12,31 +12,23 @@ import pickle
 import sys
 sys.path.append("../")
 sys.path.append("../../")
-
-
 import seaborn as sns
 import string
-import numpy as np
 import os
 import glob
 from os.path import join as opj
 import h5py  
 import matplotlib.pyplot as plt
-import pandas as pd
 import nibabel as nib
 from scipy.io import loadmat
 import torch
-
 from torch.utils.data import Dataset, Subset, DataLoader
 import json
-from PIL import Image
-
 from autoencoder import *
 #from torchsummary import summary
 #import torchvision
 #import tqdm
 #from sklearn.linear_model import Ridge
-import pickle
 #import wandb
 from pathlib import Path
 
@@ -55,8 +47,8 @@ from pathlib import Path
 DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 dataset_initialize(DATA_DIR)
 
+d_path = Path("/share/klab/labstudents/jmihatsch")
 data_path = Path("/share/klab/labstudents/jmihatsch/processed_data")
-
 
 subj = 1   #making subject into variable to possibly use later as function
 subject = f"sub-0{subj}"
@@ -71,6 +63,11 @@ fmri_test_data = opj(processed_data,f"laion_test_fmriavg_laiongeneral_sub{subj:0
 test_fmri = np.load(fmri_test_data)
 #test_fmri = (test_fmri - mean)/std
 
+embeds_path = Path("/share/klab/labstudents/jmihatsch/embeds")
+img_embeds = torch.load(embeds_path / f"image_embeds_subject-{subj:02d}.pt")
+
+labels_train = opj(processed_data, f"laion_train_stim_sub{subj:02d}.npy")
+train_imgs = np.load(labels_train)
 
 # Load betas and trial info as usual (see laion_fmri_package/load).
 # sessions = sub.get_sessions()
@@ -103,7 +100,7 @@ thr_outputs=[]
 #copying the original paper's code with slight changes. seems like it should work. I'll figure out how to check it later.
 for thr in [75,90,95]: #going over the same experiment with different thresholds
     print(f"INFO thr: {thr}") #printing out the current threshold
-    out_dir=f"models/{sub}/encoding/algebra_l2_SINGLE_thr_{thr}" #creating a folder for the output of the treshlold (thr) and subject (sub) so at the end ther should be 4 subjects * 3 thresholds = 12 folders
+    out_dir= d / f"models/{sub}/encoding/algebra_l2_SINGLE_thr_{thr}" #creating a folder for the output of the treshlold (thr) and subject (sub) so at the end ther should be 4 subjects * 3 thresholds = 12 folders
     os.makedirs(out_dir,exist_ok=True) #makes the folder if it doesnt exist already, goes on if it does
 
     outputs = {} #to collect the outputs
@@ -116,7 +113,7 @@ for thr in [75,90,95]: #going over the same experiment with different thresholds
         txt_embeds=discriminator.get_text_features(inputs["input_ids"]) #This ueses the ids from the line before to get the CLIP embeddings.
 
         #here it seems like they are checking to which word of the pair the image is closer and sorting them to the pos and neg versions of the category (difference pair)
-        probs = (images_with_embeddings@txt_embeds.T).softmax(1) #gets a matrix of embedded images and text
+        probs = (img_embeds@txt_embeds.T).softmax(1) #gets a matrix of embedded images and text
         pos_indices = probs[:,0].argsort()[-N:].detach().numpy() #retures the N most similar rows to the positive word (row number, so it can be used to find images)
         neg_indices = probs[:,1].argsort()[-N:].detach().numpy() #returnes the N most similar rows to the negative word
         fmri_positive=train_fmri[pos_indices][:N].mean(0) #avarages the brain activation pattern for all the positive concept corresponding images
@@ -130,10 +127,10 @@ for thr in [75,90,95]: #going over the same experiment with different thresholds
             
                 # Plotting the grid of images
             if pert == positive: # for the positive concept
-                grid_images = sub.images.get(pos_indices) #create a grid withh the corresponding images
+                grid_images = train_imgs[pos_indices] #create a grid withh the corresponding images
                 title = f"Positive Images for {positive} (thr={thr})" #title the grid with the concept and the threshold in the name
             else: #same steps but for the negative concept
-               grid_images = sub.images.get(neg_indices)
+               grid_images = train_imgs[neg_indices]
                title = f"Negative Images for {negative} (thr={thr})"
 
             fig, axes = plt.subplots(10, 10, figsize=(20, 20)) #creates a plot with 10*10 (100) images in a 20*20 size figure (each image is 2*2)

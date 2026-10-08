@@ -17,59 +17,25 @@ import os
 import glob
 from os.path import join as opj
 import h5py  
-import matplotlib.pyplot as plt
 import pandas as pd
 import nibabel as nib
 from scipy.io import loadmat
 import torch
-from laion_fmri.config import dataset_initialize
-from laion_fmri.discovery import describe, get_rois, get_subjects
-from laion_fmri.subject import load_subject
-from laion_fmri.splits import get_train_test_ids
-import numpy as np
-import pandas as pd
-from PIL import Image
-import requests
-from transformers import AutoProcessor, CLIPModel
-import laion_fmri
-import pickle
 import sys
 sys.path.append("../")
 sys.path.append("../../")
-
-
-import seaborn as sns
-import string
-import numpy as np
-import os
-import glob
-from os.path import join as opj
-import h5py  
-import matplotlib.pyplot as plt
-import pandas as pd
-import nibabel as nib
-from scipy.io import loadmat
-import torch
-
 from torch.utils.data import Dataset, Subset, DataLoader
 import json
-from PIL import Image
-
 from autoencoder import *
-#from torchsummary import summary
-#import torchvision
-#import tqdm
-#from sklearn.linear_model import Ridge
-import pickle
-#import wandb
-from pathlib import Path
 import tqdm
 
 #DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 #dataset_initialize(DATA_DIR)
 
-data_path = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/processed_data")
-out_dir = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/embeds")
+data_path = Path("/share/klab/labstudents/jmihatsch/processed_data")
+out_dir = Path("/share/klab/labstudents/jmihatsch/embeds")
+#data_path = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/processed_data")
+#out_dir = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/embeds")
 out_dir.mkdir(parents=True, exist_ok=True)
 
 subj = 1   #making subject into variable to possibly use later as function
