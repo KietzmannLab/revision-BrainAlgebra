@@ -73,48 +73,41 @@ data_path = Path("/share/klab/labstudents/jmihatsch/processed_data")
 subj = 1   #making subject into variable to possibly use later as function
 subject = f"sub-0{subj}"
 processed_data = data_path / f"subj{subj:02d}"
-sub = load_subject(subject) 
-sessions = sub.get_sessions()
-
-stim = laion_fmri.load_stimuli()
 labels_train = opj(processed_data, f"laion_train_stim_sub{subj:02d}.npy")
-train_imgs = np.load(labels_train, allow_pickle=True)
-print(train_imgs)
+train_imgs = np.load(labels_train)
+print("check 1")
 
-all_img = []
-
-img_ses = sub.images.array(session="ses-01")   
-print(img_ses)
-
-
-# img_array = sub.images.array("unique_LAION_fillup_cluster_0_i0_p01.jpg") 
-# print(img_array)
-
-
-discriminator = CLIPModel.from_pretrained("openai/clip-vit-base-patch32") #.to_device
+#device="cuda:1"  #"CUDA is a parallel computing platform and programming model developed by NVIDIA that enables dramatic increases in computing performance by harnessing the power of the GPU" (docs.nvidia.com)
+discriminator = CLIPModel.from_pretrained("openai/clip-vit-base-patch32") #.device
 processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
-
+print("check 2")
 # train_imgs=np.load(opj(processed_data,f"nsd_train_stim_sub{sub_idx}.npy")).astype(np.uint8)
 # train_fmri= np.load(fmri_train_data)
 
-stim = laion_fmri.load_stimuli()
-labels_train = opj(processed_data, f"laion_train_stim_sub{subj:02d}.npy")
-train_imgs = np.load(labels_train, allow_pickle=True)
-
+#stim = laion_fmri.load_stimuli()
 ## encode all the images in batch with clip
-BS=128
+BS=2  #128
 
 img_embeds=[]
 with torch.no_grad():
     for batch_idx in tqdm.trange(0,len(train_imgs)//BS+1,1):
+        print("check 3")
         batch = train_imgs[batch_idx*BS:(batch_idx+1)*BS]
         batch = [Image.fromarray(i) for i in batch]
-        
+        print("check 4")
         # apply processor
         inputs = processor(images=batch, return_tensors="pt", padding=True)
-        inputs = {k:v.to(device) for k,v in inputs.items()}
+        inputs = {k:v for k,v in inputs.items()}   #inputs = {k:v.to(device) for k,v in inputs.items()}
+        print("check 5")
         emb = discriminator.get_image_features(inputs["pixel_values"]).cpu()
         img_embeds.append(emb)
-        
+        print("check 6")
+ 
+       
 img_embeds = torch.cat(img_embeds,0)
-        
+
+
+## Source - https://stackoverflow.com/a/76218591
+# Posted by Timbus Calin
+# Retrieved 2026-10-08, License - CC BY-SA 4.0
+# pip install requests==2.27.1   
