@@ -18,7 +18,7 @@ stimulus data is currently a string of the png labels
 #set up directories
 DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 dataset_initialize(DATA_DIR)
-OUT_DIR = Path("/share/klab/labstudents/jmihatsch/processed_data")
+OUT_DIR = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/processed_data")
 
 
 
