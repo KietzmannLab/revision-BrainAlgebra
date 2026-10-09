@@ -6,6 +6,8 @@ from laion_fmri.discovery import describe, get_rois, get_subjects
 from laion_fmri.subject import load_subject
 from laion_fmri.splits import get_train_test_ids
 from pathlib import Path
+from PIL import Image
+from skimage.transform import resize
 
 '''
 argument: subject number
@@ -24,12 +26,25 @@ username = project.name
 data_path = Path(f"/share/klab/labstudents/{username}")
 OUT_DIR = data_path / "processed_data"
 
+
+def resize_images(img_all):   #img_all = (trial, dim, dim, rgb)
+    new_height, new_width = 425
+    target_shape = (img_all.shape[0], new_height, new_width, img_all.shape[3])
+    resized_np_array_float = resize(img_all, target_shape, anti_aliasing=True)
+    resized_np_array_uint8 = (resized_np_array_float * 255).astype(np.uint8)
+
+    return resized_np_array_uint8
+    
+
+
 def make_img_dictionaries(sub, sessions, trials_info):
     img_all = []
     for ses in sessions:
-        img_ses = sub.images.array(session=ses)   
+        img_ses = sub.images.array(session=ses) #(trials, dim, dim, rgb)
         img_all.append(img_ses)
     img_all = np.concatenate(img_all, axis = 0)
+
+    img_all = resize_images(img_all)
 
     labels = trials_info['label']
     unique_dictionary = {} 
@@ -52,7 +67,7 @@ def save_avg_fmri_data(subj=1):
     print(f"[INFO] Loading LAION-fMRI data for Subject {subj}")
     sub = load_subject(f"sub-{subj:02d}")
     #sessions = sub.get_sessions()
-    sessions = sub.get_sessions()
+    sessions = "ses-01", "ses-02"
 
     #train set
     #get betas for all sessions and concatenate
@@ -91,7 +106,6 @@ def save_avg_fmri_data(subj=1):
 
     np.save(SUB_DIR / f"laion_train_stim_sub{subj:02d}.npy", img_data)
     print("[INFO] Saved image data for train set in correct order")
-
 
     #test set
     #same exact steps but with shared stim across subjects
