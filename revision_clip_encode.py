@@ -31,11 +31,8 @@ from autoencoder import *
 #from sklearn.linear_model import Ridge
 #import wandb
 from pathlib import Path
-
-
 #from sklearn.cluster import KMeans
 #from sklearn.datasets import make_blobs
-
 #from encoding_models import *
 #from decoding import *
 #import nilearn
@@ -44,30 +41,29 @@ from pathlib import Path
 #import matplotlib.patches as patches
 #from torch.nn import functional as F
 
-DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
-dataset_initialize(DATA_DIR)
+#DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
+#dataset_initialize(DATA_DIR)
 
-d_path = Path("/share/klab/labstudents/jmihatsch")
-data_path = Path("/share/klab/labstudents/jmihatsch/processed_data")
+project = PROJ_ROOT = Path(__file__).resolve().parents[1]
+username = project.name
 
-subj = 1   #making subject into variable to possibly use later as function
-subject = f"sub-0{subj}"
-processed_data = data_path / f"subj{subj:02d}"
-sub = load_subject(subject) 
+data_path = Path(f"/share/klab/labstudents/{username}")
+processed_data = data_path / "processed_data"
 
-fmri_train_data = opj(processed_data,f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy")
-train_fmri = np.load(fmri_train_data)
+subj = 1
+processed_data_subject = processed_data / f"subj{subj:02d}"
+
+fmri_train_data_path = opj(processed_data_subject,f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy")
+fmri_test_data_path = opj(processed_data_subject,f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
+train_img_path = opj(processed_data_subject, f"laion_train_stim_sub{subj:02d}.npy")
+embeds_path = data_path / "embeds"
+
+train_fmri = np.load(fmri_train_data_path)
 #train_fmri = (train_fmri-mean)/std
-
-fmri_test_data = opj(processed_data,f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
-test_fmri = np.load(fmri_test_data)
+test_fmri = np.load(fmri_test_data_path)
 #test_fmri = (test_fmri - mean)/std
-
-embeds_path = Path("/share/klab/labstudents/jmihatsch/embeds")
 img_embeds = torch.load(embeds_path / f"image_embeds_subject-{subj:02d}.pt")
-
-labels_train = opj(processed_data, f"laion_train_stim_sub{subj:02d}.npy")
-train_imgs = np.load(labels_train)
+train_imgs = np.load(train_img_path)
 
 # Load betas and trial info as usual (see laion_fmri_package/load).
 # sessions = sub.get_sessions()
@@ -100,7 +96,7 @@ thr_outputs=[]
 #copying the original paper's code with slight changes. seems like it should work. I'll figure out how to check it later.
 for thr in [75,90,95]: #going over the same experiment with different thresholds
     print(f"INFO thr: {thr}") #printing out the current threshold
-    out_dir= d / f"models/{sub}/encoding/algebra_l2_SINGLE_thr_{thr}" #creating a folder for the output of the treshlold (thr) and subject (sub) so at the end ther should be 4 subjects * 3 thresholds = 12 folders
+    out_dir= data_path / f"models/sub-0{subj}/encoding/algebra_l2_SINGLE_thr_{thr}" #creating a folder for the output of the treshlold (thr) and subject (sub) so at the end ther should be 4 subjects * 3 thresholds = 12 folders
     os.makedirs(out_dir,exist_ok=True) #makes the folder if it doesnt exist already, goes on if it does
 
     outputs = {} #to collect the outputs

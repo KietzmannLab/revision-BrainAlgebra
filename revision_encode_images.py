@@ -29,19 +29,18 @@ import json
 from autoencoder import *
 import tqdm
 
-#DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
-#dataset_initialize(DATA_DIR)
+project = PROJ_ROOT = Path(__file__).resolve().parents[1]
+username = project.name
+data_path = Path(f"/share/klab/labstudents/{username}")
 
-data_path = Path("/share/klab/labstudents/jmihatsch/processed_data")
-out_dir = Path("/share/klab/labstudents/jmihatsch/embeds")
-#data_path = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/processed_data")
-#out_dir = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/embeds")
-out_dir.mkdir(parents=True, exist_ok=True)
+subj = 1
+processed_data_path = data_path / "processed_data" 
+processed_data_subject = processed_data_path / f"subj{subj:02d}"
 
-subj = 1   #making subject into variable to possibly use later as function
-processed_data = data_path / f"subj{subj:02d}"
+embeds_path = data_path / "embeds"
+embeds_path.mkdir(parents=True, exist_ok=True)
 
-labels_train = opj(processed_data, f"laion_train_stim_sub{subj:02d}.npy")
+labels_train = opj(processed_data_subject, f"laion_train_stim_sub{subj:02d}.npy")
 train_imgs = np.load(labels_train)
 train_imgs = train_imgs[0:3]   #xxx
 
@@ -67,9 +66,8 @@ with torch.no_grad():
         img_embeds.append(emb)
         print("check 4")
  
-
 img_embeds = torch.cat(img_embeds,0)
-torch.save(img_embeds, out_dir / f"image_embeds_subject-{subj:02d}.pt")
+torch.save(img_embeds, embeds_path / f"image_embeds_subject-{subj:02d}.pt")
 
 ## Source - https://stackoverflow.com/a/76218591
 # Posted by Timbus Calin

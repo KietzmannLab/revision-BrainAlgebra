@@ -18,12 +18,30 @@ stimulus data is currently a string of the png labels
 #set up directories
 DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 dataset_initialize(DATA_DIR)
-OUT_DIR = Path("/share/klab/labstudents/jmihatsch/processed_data")
 
-#OUT_DIR = Path("/home/student/j/jmihatsch/revision-BrainAlgebra/data/processed_data")
+project = PROJ_ROOT = Path(__file__).resolve().parents[1]
+username = project.name
+data_path = Path(f"/share/klab/labstudents/{username}")
+OUT_DIR = data_path / "processed_data"
 
+def make_img_dictionaries(sub, sessions, trials_info):
+    img_all = []
+    for ses in sessions:
+        img_ses = sub.images.array(session=ses)   
+        img_all.append(img_ses)
+    img_all = np.concatenate(img_all, axis = 0)
 
-
+    labels = trials_info['label']
+    unique_dictionary = {} 
+    shared_dictionary = {}
+    for n in range(len(labels)):
+        if labels[n].startswith('unique'):
+            unique_dictionary[labels[n]] = img_all[n,:,:,:]
+        elif labels[n].startswith('shared'):
+            shared_dictionary[labels[n]] = img_all[n,:,:,:]
+        else:
+            print("labels different starting characters")
+    return unique_dictionary, shared_dictionary
 
 def save_avg_fmri_data(subj=1):
     #set up subdirectory inside loop 
@@ -31,102 +49,80 @@ def save_avg_fmri_data(subj=1):
     SUB_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load betas and trial info as usual (see laion_fmri_package/load).
-    print(f"Loading fMRI subject {subj}")
+    print(f"[INFO] Loading LAION-fMRI data for Subject {subj}")
     sub = load_subject(f"sub-{subj:02d}")
+    #sessions = sub.get_sessions()
     sessions = sub.get_sessions()
 
     #train set
     #get betas for all sessions and concatenate
-    print("getting train betas all sessions")
+    print("[INFO] Getting betas for unique stimuli")
     betas_train  = sub.get_betas(session=sessions, roi="laiongeneral", stimuli="unique")
-    print("got betas all session, starting concatentation")
+    print("[INFO] Collected all Betas")
     betas_train  = np.concatenate(list(betas_train.values()), axis=0)
-    print("Concatenated betas for all sessions")
+    print("[INFO] Concatenated Betas for all sessions")
 
     #get all trial info, filter by those starting name with "unique", and concatenate
-    trials_train = sub.get_trial_info(session=sessions)
-    trials_train = pd.concat(list(trials_train.values()), ignore_index=True)
-    trials_train_filtered = trials_train[trials_train['label'].str.startswith('unique')]
-    print("Concatenated trial info for all sessions")
+    trials_info = sub.get_trial_info(session=sessions)
+    trials_info = pd.concat(list(trials_info.values()), ignore_index=True)
+
+    trials_train = trials_info[trials_info['label'].str.startswith('unique')]
+    print("[INFO] Concatenated training data trial info for all sessions")
 
     # make a dataframe out of betas and png names to use group.by to then mean the beta
-    betas_df = pd.DataFrame(betas_train)
-    betas_df['label'] = trials_train_filtered['label'].values
-    avg_betas = betas_df.groupby('label').mean()
-    print("Averaged beta values for train set")
+    betas_train_df = pd.DataFrame(betas_train)
+    betas_train_df['label'] = trials_train['label'].values
+    avg_betas_train = betas_train_df.groupby('label').mean()
+    print("[INFO] Averaged beta values for training data")
 
     #save a np array for the fmri averaged betas and one for the png filenames (maybe change later to already include the stimulus)
-    fmri_avg = avg_betas.to_numpy()
-    np.save(SUB_DIR / f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg)
-    print("Saved fMRI average for train set")
+    fmri_avg_train = avg_betas_train.to_numpy()
+    np.save(SUB_DIR / f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg_train)
+    print("[INFO] Saved averaged fMRI activity for training data")
 
-    img_all = []
-    for ses in sessions:
-        img_ses = sub.images.array(session=ses)   
-        img_all.append(img_ses)
-    #img_all = np.stack(img_all, axis = 0)
-    img_all = np.concatenate(img_all, axis = 0)
-    print("testtest", img_all.shape)
-    print(img_all)
-    print(trials_train)
-    # trials_train_filtered = trials_train[trials_train['label'].str.startswith('unique')]
+    unique_dictionary, shared_dictionary = make_img_dictionaries(sub=sub, sessions=sessions, trials_info=trials_info)
 
-    labels = trials_train['label']
-    d1 = {} 
-    d2 = {}
-    for n in range(len(labels)):
-        if labels[n].startswith('unique'):
-            d1[labels[n]] = img_all[n,:,:,:]
-        elif labels[n].startswith('shared'):
-            d2[labels[n]] = img_all[n,:,:,:]
-        else:
-            print("labels different starting characters")
-
-    print(d1.keys())
-    print(d2.keys())
-
-
-    #from dict unique i want order them by same order as in fmri activity thing
-    # make it into numpy array
-    labels_order = avg_betas.index.to_numpy()
+    labels_order = avg_betas_train.index.to_numpy()
     img_data = []
     for name in labels_order:
-        img_array = d1[name]
+        img_array = unique_dictionary[name]
         img_data.append(img_array)
     img_data = np.stack(img_data, axis = 0)
-    print(type(img_data))
-    print(img_data.shape)
 
     np.save(SUB_DIR / f"laion_train_stim_sub{subj:02d}.npy", img_data)
-    print("Saved img data for train set in correct order hopefully")
+    print("[INFO] Saved image data for train set in correct order")
 
 
-'''
     #test set
     #same exact steps but with shared stim across subjects
-    print("getting test betas all sessions")
+    print("[INFO] Getting betas for shared stimuli")
     betas_test =  sub.get_betas(session=sessions, roi="laiongeneral", stimuli="shared")
-    print("got betas all session, starting concatentation")
+    print("[INFO] Collected all Betas")
     betas_test  = np.concatenate(list(betas_test.values()), axis=0)
-    print("Concatenated beta values for test set")
+    print("[INFO] Concatenated Betas for all sessions")
 
-    trials_test = sub.get_trial_info(session=sessions)
-    trials_test = pd.concat(list(trials_test.values()), ignore_index=True)
-    trials_test = trials_test[trials_test['label'].str.startswith('shared')]
-    print("Concatenated trial data for test set")
+    trials_test = trials_info[trials_info['label'].str.startswith('shared')]
+    print("[INFO] Concatenated test data trial info for all sessions")
 
-    betas_df_test = pd.DataFrame(betas_test)
-    betas_df_test['label'] = trials_test['label'].values
-    avg_betas_test = betas_df_test.groupby('label').mean()
-    print("Averaged beta values for test set")
+    betas_test_df = pd.DataFrame(betas_test)
+    betas_test_df['label'] = trials_test['label'].values
+    avg_betas_test = betas_test_df.groupby('label').mean()
+    print("[INFO] Averaged beta values for test data")
 
     fmri_avg_test = avg_betas_test.to_numpy()
     np.save(SUB_DIR / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg_test)
-    print("Saved fMRI average test set")
-    labels_test = avg_betas_test.index.to_numpy()
-    np.save(SUB_DIR / f"laion_test_stim_sub{subj:02d}.npy", labels_test)
-    print("saved stim label for test set")
-'''
+    print("[INFO] Saved averaged fMRI activity for test data")
+
+    labels_order = avg_betas_test.index.to_numpy()
+    img_data = []
+    for name in labels_order:
+        img_array = shared_dictionary[name]
+        img_data.append(img_array)
+    img_data = np.stack(img_data, axis = 0)
+
+    np.save(SUB_DIR / f"laion_test_stim_sub{subj:02d}.npy", img_data)
+    print("[INFO] Saved image data for train set in correct order")
+
 
 save_avg_fmri_data(subj=1)
 
