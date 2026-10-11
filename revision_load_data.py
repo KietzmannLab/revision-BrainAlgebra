@@ -8,6 +8,8 @@ from laion_fmri.splits import get_train_test_ids
 from pathlib import Path
 from PIL import Image
 from skimage.transform import resize
+from datetime import datetime
+
 
 '''
 argument: subject number
@@ -28,14 +30,20 @@ OUT_DIR = data_path / "processed_data"
 
 
 def resize_images(img_all):   #img_all = (trial, dim, dim, rgb)
-    new_height, new_width = 425
-    target_shape = (img_all.shape[0], new_height, new_width, img_all.shape[3])
-    resized_np_array_float = resize(img_all, target_shape, anti_aliasing=True)
-    resized_np_array_uint8 = (resized_np_array_float * 255).astype(np.uint8)
+    new_height = 425
+    new_width = 425
+    new_img=[]
 
-    return resized_np_array_uint8
+    for i in range(len(img_all)):
+        image = img_all[i]
+        target_shape = (new_height, new_width, image.shape[2])
+        resized_np_array_float = resize(image, target_shape, anti_aliasing=True)
+        resized_np_array_uint8 = (resized_np_array_float * 255).astype(np.uint8)
+        new_img.append(resized_np_array_uint8)
+    img_all_new = np.stack(new_img, axis=0)
+    print("[INFO] Resized images to shape (425,425)")
+    return img_all_new
     
-
 
 def make_img_dictionaries(sub, sessions, trials_info):
     img_all = []
@@ -43,13 +51,14 @@ def make_img_dictionaries(sub, sessions, trials_info):
         img_ses = sub.images.array(session=ses) #(trials, dim, dim, rgb)
         img_all.append(img_ses)
     img_all = np.concatenate(img_all, axis = 0)
-
+    print("[INFO] Resizing images")
     img_all = resize_images(img_all)
-
+    print("image_all shape: ",img_all.shape)
     labels = trials_info['label']
+    print("n labels:", len(labels)) 
     unique_dictionary = {} 
     shared_dictionary = {}
-    for n in range(len(labels)):
+    for n in range(len(labels)-1):
         if labels[n].startswith('unique'):
             unique_dictionary[labels[n]] = img_all[n,:,:,:]
         elif labels[n].startswith('shared'):
@@ -60,14 +69,16 @@ def make_img_dictionaries(sub, sessions, trials_info):
 
 def save_avg_fmri_data(subj=1):
     #set up subdirectory inside loop 
+    now = datetime.now()
+    print("start time:", now)
     SUB_DIR = OUT_DIR / f"subj{subj:02d}"
     SUB_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load betas and trial info as usual (see laion_fmri_package/load).
     print(f"[INFO] Loading LAION-fMRI data for Subject {subj}")
     sub = load_subject(f"sub-{subj:02d}")
-    #sessions = sub.get_sessions()
-    sessions = "ses-01", "ses-02"
+    sessions = sub.get_sessions()
+    #sessions = "ses-01", "ses-02"
 
     #train set
     #get betas for all sessions and concatenate
@@ -136,6 +147,8 @@ def save_avg_fmri_data(subj=1):
 
     np.save(SUB_DIR / f"laion_test_stim_sub{subj:02d}.npy", img_data)
     print("[INFO] Saved image data for train set in correct order")
+    now = datetime.now()
+    print("end time:", now)
 
 
 save_avg_fmri_data(subj=1)
