@@ -34,7 +34,7 @@ username = project.name
 data_path = Path(f"/share/klab/labstudents/{username}")
 
 
-def encode_images(subj=subj):
+def encode_images(subj):
     processed_data_path = data_path / "processed_data" 
     processed_data_subject = processed_data_path / f"subj{subj:02d}"
 
@@ -45,7 +45,7 @@ def encode_images(subj=subj):
     train_imgs = np.load(train_stim)
     #train_imgs = train_imgs[0:10]   #xxx
 
-    device="cuda"  #"CUDA is a parallel computing platform and programming model developed by NVIDIA that enables dramatic increases in computing performance by harnessing the power of the GPU" (docs.nvidia.com)
+    device="cuda"  
     discriminator = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
     processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
@@ -55,22 +55,18 @@ def encode_images(subj=subj):
     img_embeds=[]
     with torch.no_grad():
         for batch_idx in tqdm.trange(0,len(train_imgs)//BS+1,1):
-            print("check 1")
             batch = train_imgs[batch_idx*BS:(batch_idx+1)*BS]
             batch = [Image.fromarray(i) for i in batch]
-            print("check 2")
             # apply processor
             inputs = processor(images=batch, return_tensors="pt", padding=True)
-            inputs = {k:v.to(device) for k,v in inputs.items()}  #inputs = {k:v for k,v in inputs.items()}   #
-            print("check 3")
+            inputs = {k:v.to(device) for k,v in inputs.items()}  #inputs = {k:v for k,v in inputs.items()}   
             emb = discriminator.get_image_features(inputs["pixel_values"]).cpu()
             img_embeds.append(emb)
-            print("check 4")
     
     img_embeds = torch.cat(img_embeds,0)
     torch.save(img_embeds, embeds_path / f"image_embeds_subject-{subj:02d}.pt")
 
-for subj in [1,3,5,6,7]:
+for subj in (1,3,5,6,7):
     encode_images(subj)
 
 ## Source - https://stackoverflow.com/a/76218591
@@ -79,3 +75,4 @@ for subj in [1,3,5,6,7]:
 # pip install requests==2.27.1   
 
 #salloc -p klab-gpu -x klab-8 -n 1 -c 1 --mem 300G --gres=gpu:1 -t 04:00:00 srun --pty bash
+#salloc -p klab-gpu -x klab-7,klab-8 -n 1 -c 4 --mem 32G --gres=gpu:1 -t 04:00:00 srun --pty bash
