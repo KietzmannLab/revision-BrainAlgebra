@@ -1,0 +1,21 @@
+start time: 2026-10-11 14:20:29.847463
+[INFO] Loading LAION-fMRI data for Subject 1
+[INFO] Getting betas for unique stimuli
+[INFO] Collected all Betas
+[INFO] Concatenated Betas for all sessions
+[INFO] Concatenated training data trial info for all sessions
+[INFO] Averaged beta values for training data
+[INFO] Saved averaged fMRI activity for training data
+[INFO] Resizing images
+[INFO] Resized images to shape (425,425)
+image_all shape:  (31856, 425, 425, 3)
+n labels: 31856
+[INFO] Saved image data for train set in correct order
+[INFO] Getting betas for shared stimuli
+[INFO] Collected all Betas
+[INFO] Concatenated Betas for all sessions
+[INFO] Concatenated test data trial info for all sessions
+[INFO] Averaged beta values for test data
+[INFO] Saved averaged fMRI activity for test data
+[INFO] Saved image data for train set in correct order
+end time: 2026-10-11 15:52:53.871157
