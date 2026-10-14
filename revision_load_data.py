@@ -75,8 +75,8 @@ def save_avg_fmri_data(subj=1):
 
     # Load betas and trial info as usual (see laion_fmri_package/load).
     sub = load_subject(f"sub-{subj:02d}")
-    #sessions = sub.get_sessions()
-    sessions = "ses-01", "ses-02"
+    sessions = sub.get_sessions()
+    #sessions = "ses-01", "ses-02"
     print(f"[INFO] Loading LAION-fMRI data for Subject {subj}\n\tSessions: {', '.join(sessions)}")
 
     #train set
@@ -156,7 +156,7 @@ def save_avg_fmri_data(subj=1):
     print("[INFO] Total Time:", total_time)
 
 
-save_avg_fmri_data(subj=1)
+#save_avg_fmri_data(subj=1)
 
 
 
