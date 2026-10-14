@@ -6,4 +6,4 @@
 #SBATCH --mem=300G
 #SBATCH --array=1,3,5,6,7
 
-python3 revision_run_load_data.py ${SLURM_ARRAY_TASK_ID}
+python3 revision_run_parallel.py ${SLURM_ARRAY_TASK_ID}

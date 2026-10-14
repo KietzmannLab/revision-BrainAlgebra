@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/student/j/jmihatsch/revision-BrainAlgebra/revision_run_load_data.py", line 3, in <module>
+    from revision_clip_encode import clip_encode
+  File "/home/student/j/jmihatsch/revision-BrainAlgebra/revision_clip_encode.py", line 131
+    grid_images = train_imgs[neg_indices]
+    ^
+IndentationError: expected an indented block after 'else' statement on line 130
