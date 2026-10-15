@@ -1,10 +1,14 @@
 import torch
 from pathlib import Path
-
-path = Path("/share/klab/labstudents/jmihatsch/embeds")
-
-embeds = torch.load(path / "image_embeds_subject-01.pt")
-print(embeds.shape)
+import pickle
 
 
+path = Path("/share/klab/alkroner/brain-diffuser/data/regression_weights/subj01/vdvae_regression_weights.pkl")
 
+with open(path, 'rb') as file:
+    data = pickle.load(file)
+
+print(type(data))
+
+state_dict = torch.load(data)
+print(state_dict)

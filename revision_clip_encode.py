@@ -41,6 +41,9 @@ from pathlib import Path
 #import matplotlib.patches as patches
 #from torch.nn import functional as F
 
+from revision_run_algebra_on_brain_space import run_algebra_experiment_on_brain_space_single_pert
+
+
 #DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 #dataset_initialize(DATA_DIR)
 
@@ -67,27 +70,10 @@ def clip_encode(subj):
     img_embeds = torch.load(embeds_path / f"image_embeds_subject-{subj:02d}.pt")
     train_imgs = np.load(train_img_path)
 
-    # Load betas and trial info as usual (see laion_fmri_package/load).
-    # sessions = sub.get_sessions()
-    # betas_per_ses  = sub.get_betas(session=sessions, roi="laiongeneral")
-    # trials_per_ses = sub.get_trial_info(session=sessions)
-
-    # Concatenate across sessions (standard idiom).
-    # betas  = np.concatenate(list(betas_per_ses.values()), axis=0)
-    # trials = pd.concat(list(trials_per_ses.values()), ignore_index=True)
-    # label = trials['label'] 
-
     # The things the authors of the original paper did to load the CLIP stuff
 
     discriminator = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
-
-    #lodaing the full subject info - probably when converting into a function after doing the split train/test and avareging for each picture not needed, instead the function sould get the whole preprocessed data of a subject
-    #images_with_embeddings = np.concatenate([sub.metadata.image_name, sub.embeddings.all("CLIP")], axis=1) 
-
-    #not sure if "image_name" would work, and the embeddings maybe better done before the preprocessing to not get confused about order, image names etc., so if doing a function that sould not be needed and the function should get data already with the embeddings 
-    #this should thechnically make a matrix where each image name is paired with the embedded CLIP, so then it should be possible to find the embedding using the name
-    #really unsure about what im doing here, and the stuff for some reason won't run probably because I messed up something in the terminal
 
     difference_pairs=[("man","woman"),("indoor scene","outdoor scene"),("day","night"),("summer","winter"),("sad","happy"),("cat","dog"), ("still", "moving"), ("left","right"), ("top","down"), ("crowded","empty")]
     modality="fmri"
@@ -139,6 +125,38 @@ def clip_encode(subj):
                 plt.savefig(opj(target_dir, f"{pert}_images_grid.png")) #saves the figure with the pertrubation name
                 #plt.show() #shows the figure
 
+                for i, (prompt, stim) in enumerate(list(zip(prompts, stims))):
+
+                    plain_decoded, algebra_imgs, fmri_difference, fig = run_algebra_experiment_on_brain_space_single_pert(
+                        fmri_inputs=prompt,
+                        kind=modality,
+                        pert=pert,
+                        fmri_pert= fmri_pert,
+                        fmri_stim=stim,
+                        thr_perc=thr
+                    )
+
+                    # Save stuff
+
+                    '''torch.save(fmri_difference, opj(target_dir, f"diff_{i}.pt"))
+                    fig.savefig(opj(target_dir, f"algebra_{i}.png"))
+                    svg_filename = opj(target_dir, f"algebra_{i}.svg")
+                    fig.savefig(svg_filename, format='svg', dpi=300)
+
+                    # Store results in the dictionary
+                    outputs[f"{pert}"][i]= {
+                        "fmri_difference": fmri_difference,
+                        "algebra_imgs": algebra_imgs,
+                        "plain_decoded": plain_decoded,
+                        "figure": fig,
+                        "pos_num": len(pos_indices),
+                        "neg_num": len(neg_indices)
+                    }
+
+
+                thr_outputs.append(outputs)'''
+
 #for subj in (1,3,5,6,7):
 #    clip_encode(subj)
 
+clip_encode(subj=1)
