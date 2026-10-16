@@ -134,6 +134,10 @@ def save_avg_fmri_data(subj=1):
     betas_test_df = pd.DataFrame(betas_test)
     betas_test_df['label'] = trials_test['label'].values
     avg_betas_test = betas_test_df.groupby('label').mean()
+    avg_betas_test = avg_betas_test.sort_index()  #xxx
+
+
+    #sort alphabetically
     print(f"[INFO] Averaged beta values for test data, trials: {len(avg_betas_test)}")
 
     fmri_avg_test = avg_betas_test.to_numpy()
@@ -141,6 +145,7 @@ def save_avg_fmri_data(subj=1):
     print("[INFO] Saved averaged fMRI activity for test data")
 
     labels_order = avg_betas_test.index.to_numpy()
+
     img_data = []
     for name in labels_order:
         img_array = shared_dictionary[name]

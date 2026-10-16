@@ -28,6 +28,7 @@ from torch.utils.data import Dataset, Subset, DataLoader
 import json
 from autoencoder import *
 import tqdm
+from torch.nn import functional as F
 
 def run_algebra_experiment_on_brain_space_single_pert(fmri_inputs=None, kind="text", pert="",fmri_pert=None, fmri_stim=None,thr_perc=None,l2_norm=True, N=100):
     

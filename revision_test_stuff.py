@@ -10,5 +10,4 @@ with open(path, 'rb') as file:
 
 print(type(data))
 
-state_dict = torch.load(data)
-print(state_dict)
+print(data)

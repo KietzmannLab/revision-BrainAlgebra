@@ -40,6 +40,8 @@ from pathlib import Path
 #from nilearn import plotting
 #import matplotlib.patches as patches
 #from torch.nn import functional as F
+import random
+from torch.nn import functional as F
 
 from revision_run_algebra_on_brain_space import run_algebra_experiment_on_brain_space_single_pert
 
@@ -55,12 +57,13 @@ processed_data = data_path / "processed_data"
 
 subj = 1
 
-def clip_encode(subj):
+def brain_algebra(subj):
     processed_data_subject = processed_data / f"subj{subj:02d}"
 
     fmri_train_data_path = opj(processed_data_subject,f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy")
     fmri_test_data_path = opj(processed_data_subject,f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
     train_img_path = opj(processed_data_subject, f"laion_train_stim_sub{subj:02d}.npy")
+    test_img_path = opj(processed_data_subject, f"laion_test_stim_sub{subj:02d}.npy")
     embeds_path = data_path / "embeds"
 
     train_fmri = np.load(fmri_train_data_path)
@@ -69,6 +72,7 @@ def clip_encode(subj):
     #test_fmri = (test_fmri - mean)/std
     img_embeds = torch.load(embeds_path / f"image_embeds_subject-{subj:02d}.pt")
     train_imgs = np.load(train_img_path)
+    test_imgs = np.load(test_img_path)
 
     # The things the authors of the original paper did to load the CLIP stuff
 
@@ -79,6 +83,14 @@ def clip_encode(subj):
     modality="fmri"
     N=100
     thr_outputs=[]
+
+    random.seed(42)
+    indices = sorted(random.sample(range(len(test_fmri)), 100))
+    print(indices)
+
+    prompts = test_fmri[indices]
+    stims = test_imgs[indices]
+
     #copied from the original paper's code, some of their pre-defined stuff
 
     #copying the original paper's code with slight changes. seems like it should work. I'll figure out how to check it later.
@@ -159,4 +171,4 @@ def clip_encode(subj):
 #for subj in (1,3,5,6,7):
 #    clip_encode(subj)
 
-clip_encode(subj=1)
+brain_algebra(subj=1)
