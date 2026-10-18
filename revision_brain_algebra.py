@@ -1,53 +1,14 @@
-from laion_fmri.config import dataset_initialize
-from laion_fmri.discovery import describe, get_rois, get_subjects
-from laion_fmri.subject import load_subject
-from laion_fmri.splits import get_train_test_ids
 import numpy as np
-import pandas as pd
-from PIL import Image
-import requests
 from transformers import AutoProcessor, CLIPModel
-import laion_fmri
-import pickle
-import sys
-sys.path.append("../")
-sys.path.append("../../")
-import seaborn as sns
-import string
 import os
-import glob
 from os.path import join as opj
-import h5py  
 import matplotlib.pyplot as plt
-import nibabel as nib
-from scipy.io import loadmat
 import torch
-from torch.utils.data import Dataset, Subset, DataLoader
-import json
 from autoencoder import *
-#from torchsummary import summary
-#import torchvision
-#import tqdm
-#from sklearn.linear_model import Ridge
-#import wandb
 from pathlib import Path
-#from sklearn.cluster import KMeans
-#from sklearn.datasets import make_blobs
-#from encoding_models import *
-#from decoding import *
-#import nilearn
-#from scipy import stats
-#from nilearn import plotting
-#import matplotlib.patches as patches
-#from torch.nn import functional as F
 import random
-from torch.nn import functional as F
-
 from revision_run_algebra_on_brain_space import run_algebra_experiment_on_brain_space_single_pert
-
-
-#DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
-#dataset_initialize(DATA_DIR)
+from decoding import BrainDiffuserPretrainedDecoder
 
 project = PROJ_ROOT = Path(__file__).resolve().parents[1]
 username = project.name
@@ -55,9 +16,13 @@ username = project.name
 data_path = Path(f"/share/klab/labstudents/{username}")
 processed_data = data_path / "processed_data"
 
-subj = 1
 
 def brain_algebra(subj):
+    
+    subj_path=opj("/home/matteo/explore_NSD","models",sub)
+    device = "cpu"
+    brain_decoder=BrainDiffuserPretrainedDecoder(subj_path=subj_path,device=device)
+
     processed_data_subject = processed_data / f"subj{subj:02d}"
 
     fmri_train_data_path = opj(processed_data_subject,f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy")

@@ -1,31 +1,11 @@
-import laion_fmri
 from PIL import Image
-import requests
 from transformers import AutoProcessor, CLIPModel
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from laion_fmri.config import dataset_initialize
-from laion_fmri.discovery import describe, get_rois, get_subjects
-from laion_fmri.subject import load_subject
-from laion_fmri.splits import get_train_test_ids
 from pathlib import Path
-import pickle
-import seaborn as sns
-import string
 import numpy as np
-import os
-import glob
-from os.path import join as opj
-import h5py  
-import pandas as pd
-import nibabel as nib
-from scipy.io import loadmat
 import torch
 import sys
 sys.path.append("../")
 sys.path.append("../../")
-from torch.utils.data import Dataset, Subset, DataLoader
-import json
 from autoencoder import *
 import tqdm
 

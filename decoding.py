@@ -4,7 +4,6 @@ sys.path.append("../")
 from hparams import HParams
 from hps import Hyperparams
 from vae import VAE
-
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.manifold import TSNE
@@ -52,7 +51,7 @@ from diffusers.utils import (
 from sklearn.cluster import KMeans
 from sklearn.datasets import make_blobs
 
-from encoding_models import *
+#from encoding_models import *
 import subprocess
 import sys
 

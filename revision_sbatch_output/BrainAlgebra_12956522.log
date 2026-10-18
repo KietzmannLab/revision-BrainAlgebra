@@ -1,0 +1,24 @@
+[INFO] Start Time: 2026-10-17 23:27:46.619500
+[INFO] Loading LAION-fMRI data for Subject 7
+	Sessions: ses-01, ses-02, ses-03, ses-04, ses-05, ses-06, ses-07, ses-08, ses-09, ses-10, ses-11, ses-12, ses-13, ses-14, ses-15, ses-16, ses-17, ses-18, ses-19, ses-20, ses-21, ses-22, ses-23, ses-24, ses-25, ses-26, ses-27, ses-28, ses-29, ses-30
+[INFO] Getting betas for train stimuli: unique, mask: laiongeneral
+[INFO] Collected all Betas, shape: (18842, 10920)
+[INFO] Collected unique trial info for all sessions, trials: 18842
+[INFO] Averaged beta values for train data, trials: 4712
+[INFO] Saved averaged fMRI activity for train data
+[INFO] Collected all Image data, shape: (31856, 1000, 1000, 3)
+[INFO] Resized Image data, new shape: (31856, 425, 425, 3)
+[INFO] Built image dictionaries 
+	unique: 4712 
+	shared: 1492
+[INFO] Aligned image data to fMRI trial order
+[INFO] Saved image data for train data
+[INFO] Getting betas for test stimuli: shared, mask: laiongeneral
+[INFO] Collected all Betas, shape: (13014, 10920)
+[INFO] Collected shared trial info for all sessions, trials: 13014
+[INFO] Averaged beta values for test data, trials: 1492
+[INFO] Saved averaged fMRI activity for test data
+[INFO] Aligned image data to fMRI trial order
+[INFO] Saved image data for test data
+End Time: 2026-10-18 00:35:50.185782
+[INFO] Total Time: 1:08:03.566282
