@@ -21,7 +21,7 @@ def encode_images(subj):
     embeds_path = data_path / "embeds"
     embeds_path.mkdir(parents=True, exist_ok=True)
 
-    train_stim = opj(processed_data_subject, f"laion_train_stim_sub{subj:02d}.npy")
+    train_stim = processed_data_subject / f"laion_train_stim_sub{subj:02d}.npy"
     train_imgs = np.load(train_stim)
     #train_imgs = train_imgs[0:10]   #xxx
 
@@ -46,8 +46,10 @@ def encode_images(subj):
     img_embeds = torch.cat(img_embeds,0)
     torch.save(img_embeds, embeds_path / f"image_embeds_subject-{subj:02d}.pt")
 
-for subj in (1,3,5,6,7):
-    encode_images(subj)
+# for subj in (1,3,5,6,7):
+#     encode_images(subj)
+
+encode_images(subj=1)
 
 ## Source - https://stackoverflow.com/a/76218591
 # Posted by Timbus Calin

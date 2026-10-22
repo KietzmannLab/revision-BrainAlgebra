@@ -5,4 +5,4 @@ from revision_brain_algebra import brain_algebra
 subj = int(sys.argv[1])
 
 save_avg_fmri_data(subj=subj)
-#clip_encode(subj=subj)
+#brain_algebra(subj=subj)

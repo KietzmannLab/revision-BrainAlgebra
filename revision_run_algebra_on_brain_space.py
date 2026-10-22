@@ -4,8 +4,11 @@ import torch
 from autoencoder import *
 from torch.nn import functional as F
 from decoding import BrainDiffuserPretrainedDecoder
+from pathlib import Path
 
-def run_algebra_experiment_on_brain_space_single_pert(fmri_inputs=None, kind="text", pert="",fmri_pert=None, fmri_stim=None,thr_perc=None,l2_norm=True, N=100):
+
+
+def run_algebra_experiment_on_brain_space_single_pert(fmri_inputs=None, kind="text", pert="",fmri_pert=None, fmri_stim=None,thr_perc=None,l2_norm=True, N=100, subj=1):
     
     ## look for concepts fMRI
     # inputs = processor(text=[positive, negative],return_tensors="pt", padding=True)
@@ -82,8 +85,9 @@ def run_algebra_experiment_on_brain_space_single_pert(fmri_inputs=None, kind="te
         #reset the previous norm
         fmri_algebra=norm.unsqueeze(1)*fmri_algebra
         
-    # print(fmri_algebra.shape)
-    
+    return fmri_algebra
+
+    '''
     algebra_imgs,_=brain_decoder.decode(fmri_algebra,num_inference_steps=37)
     
 
@@ -123,6 +127,5 @@ def run_algebra_experiment_on_brain_space_single_pert(fmri_inputs=None, kind="te
     plain_decoded=algebra_imgs[4]
     #save difference
     
-    return plain_decoded, algebra_imgs, fmri_difference,fig
-    
+    return plain_decoded, algebra_imgs, fmri_difference,fig'''
     

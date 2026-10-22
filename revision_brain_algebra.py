@@ -8,20 +8,21 @@ from autoencoder import *
 from pathlib import Path
 import random
 from revision_run_algebra_on_brain_space import run_algebra_experiment_on_brain_space_single_pert
-from decoding import BrainDiffuserPretrainedDecoder
+#from decoding import BrainDiffuserPretrainedDecoder
 
 project = PROJ_ROOT = Path(__file__).resolve().parents[1]
 username = project.name
 
 data_path = Path(f"/share/klab/labstudents/{username}")
 processed_data = data_path / "processed_data"
-
+algebra_dir = Path("/share/klab/labstudents/jmihatsch/fmri_algebra")
+algebra_dir.mkdir(parents=True, exist_ok=True)
 
 def brain_algebra(subj):
     
-    subj_path=opj("/home/matteo/explore_NSD","models",sub)
-    device = "cpu"
-    brain_decoder=BrainDiffuserPretrainedDecoder(subj_path=subj_path,device=device)
+    #subj_path=opj("/home/matteo/explore_NSD","models",sub)
+    #device = "cpu"
+    #brain_decoder=BrainDiffuserPretrainedDecoder(subj_path=subj_path,device=device)
 
     processed_data_subject = processed_data / f"subj{subj:02d}"
 
@@ -59,7 +60,7 @@ def brain_algebra(subj):
     #copied from the original paper's code, some of their pre-defined stuff
 
     #copying the original paper's code with slight changes. seems like it should work. I'll figure out how to check it later.
-    for thr in [75,90,95]: #going over the same experiment with different thresholds
+    for thr in [0, 25, 50, 75, 90, 95]: #going over the same experiment with different thresholds
         print(f"INFO thr: {thr}") #printing out the current threshold
         out_dir= data_path / f"models/sub-0{subj}/encoding/algebra_l2_SINGLE_thr_{thr}" #creating a folder for the output of the treshlold (thr) and subject (sub) so at the end ther should be 4 subjects * 3 thresholds = 12 folders
         os.makedirs(out_dir,exist_ok=True) #makes the folder if it doesnt exist already, goes on if it does
@@ -88,10 +89,11 @@ def brain_algebra(subj):
                 
                     # Plotting the grid of images
                 if pert == positive: # for the positive concept
-                    grid_images = train_imgs[pos_indices] #create a grid withh the corresponding images
+                    grid_images = train_imgs[pos_indices][::-1]
+                    #create a grid withh the corresponding images
                     title = f"Positive Images for {positive} (thr={thr})" #title the grid with the concept and the threshold in the name
                 else: #same steps but for the negative concept
-                    grid_images = train_imgs[neg_indices]
+                    grid_images = train_imgs[neg_indices][::-1]
                     title = f"Negative Images for {negative} (thr={thr})"
 
                 fig, axes = plt.subplots(10, 10, figsize=(20, 20)) #creates a plot with 10*10 (100) images in a 20*20 size figure (each image is 2*2)
@@ -99,41 +101,53 @@ def brain_algebra(subj):
                 for img, ax in zip(grid_images[:100], axes.flat): #goes through each image and the corresponding axes (.flat to make it a vector instead of a matrix)
                     ax.imshow(img)  # Assuming images are in a format plt.imshow can display -- original author's comment
                     ax.axis('off') #does not show the axes -- for pretty?
-                plt.savefig(opj(target_dir, f"{pert}_images_grid.png")) #saves the figure with the pertrubation name
+                plt.savefig(opj(target_dir, f"{pert}_images_grid_new.png")) #saves the figure with the pertrubation name
                 #plt.show() #shows the figure
 
+                
+                all_algebra_fmri = []
                 for i, (prompt, stim) in enumerate(list(zip(prompts, stims))):
 
-                    plain_decoded, algebra_imgs, fmri_difference, fig = run_algebra_experiment_on_brain_space_single_pert(
+                    #plain_decoded, algebra_imgs, fmri_difference, fig = 
+                    fmri_algebra = run_algebra_experiment_on_brain_space_single_pert(
                         fmri_inputs=prompt,
                         kind=modality,
                         pert=pert,
                         fmri_pert= fmri_pert,
                         fmri_stim=stim,
-                        thr_perc=thr
+                        thr_perc=thr,
+                        subj=subj
                     )
+                    all_algebra_fmri.append(fmri_algebra.numpy())
+                all_algebra_fmri = np.concatenate(all_algebra_fmri)
+                print(all_algebra_fmri.shape)
+                fmri_algebra_dir = algebra_dir / f"subj{subj:02d}"
+                np.save(fmri_algebra_dir / f"fmri_brain_algebra_sub{subj:02d}_{pert}_{thr}.npy", all_algebra_fmri)
 
+                
                     # Save stuff
 
-                    '''torch.save(fmri_difference, opj(target_dir, f"diff_{i}.pt"))
-                    fig.savefig(opj(target_dir, f"algebra_{i}.png"))
-                    svg_filename = opj(target_dir, f"algebra_{i}.svg")
-                    fig.savefig(svg_filename, format='svg', dpi=300)
+                #     torch.save(fmri_difference, opj(target_dir, f"diff_{i}.pt"))
+                #     fig.savefig(opj(target_dir, f"algebra_{i}.png"))
+                #     svg_filename = opj(target_dir, f"algebra_{i}.svg")
+                #     fig.savefig(svg_filename, format='svg', dpi=300)
 
-                    # Store results in the dictionary
-                    outputs[f"{pert}"][i]= {
-                        "fmri_difference": fmri_difference,
-                        "algebra_imgs": algebra_imgs,
-                        "plain_decoded": plain_decoded,
-                        "figure": fig,
-                        "pos_num": len(pos_indices),
-                        "neg_num": len(neg_indices)
-                    }
+                #     # Store results in the dictionary
+                #     outputs[f"{pert}"][i]= {
+                #         "fmri_difference": fmri_difference,
+                #         "algebra_imgs": algebra_imgs,
+                #         "plain_decoded": plain_decoded,
+                #         "figure": fig,
+                #         "pos_num": len(pos_indices),
+                #         "neg_num": len(neg_indices)
+                #     }
 
 
-                thr_outputs.append(outputs)'''
+                # thr_outputs.append(outputs)
 
 #for subj in (1,3,5,6,7):
 #    clip_encode(subj)
 
 brain_algebra(subj=1)
+
+#python3 revision_brain_algebra.py

@@ -1,0 +1,19 @@
+1. revision_load_data.py
+2. revision_encode_images.py
+3. revision_brain_algebra.py
+___
+4. cliptext.py  
+5. clipvision.py
+6. vdvae.py
+7. vdvae_reconstruct_images.py
+8. diffuser_reconstruct_images.py
+
+or 
+4. slurm_regression.sh
+5. slurm_reconstruct.sh
+
+if all concepts
+9/6. revision_plot.py
+-------------------------------
+Note: 4 and 5 are interchangeable
+
