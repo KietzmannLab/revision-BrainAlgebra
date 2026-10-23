@@ -7,6 +7,9 @@ ___
 6. vdvae.py
 7. vdvae_reconstruct_images.py
 8. diffuser_reconstruct_images.py
+9. revision_similarity
+10. revision_compute_baseline.py
+11. revision_plot_similarity.py
 
 or 
 4. slurm_regression.sh
