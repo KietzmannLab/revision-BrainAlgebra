@@ -271,6 +271,9 @@ def plot_all(subj):
         plot_compare_ours_with_alex(subj=1, thr=thr, concepts=concepts)
         plot_star(subj=subj, thr=thr, concepts=concepts)
 
+
+plot_all(subj=1)
+
 #for thr in (0, 25, 50, 75, 90, 95):  
 #plot_diffusion_decoded(sub=1, thr=50, concepts=concepts)
 #plot_compare_original_vdvae_decoded(sub=1, thr=50, concepts=concepts)

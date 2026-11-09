@@ -12,6 +12,7 @@ import tqdm
 import numpy as np
 from PIL import ImageFile
 import random
+from config import *
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -58,7 +59,7 @@ for sub in subjs:
                 print(pair)
                 all_results[thr][pair] = dict()
 
-                algebra_dir = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/{pair}_{thr}")
+                algebra_dir = subject_path(DIFFUSER_IMAGES, sub) / f"{pair}_{thr}"
                 images = [Image.open(algebra_dir / f"diffuser_{i}.png") for i in range(N * 9)]
                 # Encode the original image
                 original_img = images[4]
@@ -113,7 +114,7 @@ for sub in subjs:
 
                     
     all_results_subv1[sub] = all_results
-
+SIMILARITY_DATA_PATH.mkdir(parents=True, exist_ok=True)
 with open(SIMILARITY_DATA_PATH / "similarity_v1.pkl", "wb") as f:
     pickle.dump(all_results_subv1, f)
 
@@ -164,7 +165,7 @@ for sub in subjs:
                 print(pair)
                 all_results[thr][pair] = dict()
 
-                algebra_dir = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/{pair}_{thr}")
+                algebra_dir = subject_path(DIFFUSER_IMAGES, sub) / f"{pair}_{thr}"
                 images = [Image.open(algebra_dir / f"diffuser_{i}.png") for i in range(N * 9)]
                 # Encode the original image
                 # original_img = stimulus
