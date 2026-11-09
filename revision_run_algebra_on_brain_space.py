@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from autoencoder import *
 from torch.nn import functional as F
-from decoding import BrainDiffuserPretrainedDecoder
 from pathlib import Path
 
 
@@ -85,7 +84,7 @@ def run_algebra_experiment_on_brain_space_single_pert(fmri_inputs=None, kind="te
         #reset the previous norm
         fmri_algebra=norm.unsqueeze(1)*fmri_algebra
         
-    return fmri_algebra
+    return fmri_algebra, fmri_difference
 
     '''
     algebra_imgs,_=brain_decoder.decode(fmri_algebra,num_inference_steps=37)

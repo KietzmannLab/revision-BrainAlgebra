@@ -6,36 +6,34 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+from config import *
 
-sub = 1
-thr = 50
+
+#thr = 50
 #pert = "outdoor scene"
 concepts = ["man","woman","indoor scene", "outdoor scene","day", "night","summer","winter","sad","happy","crowded","empty"]
-figures_dir = Path(f"/share/klab/labstudents/jmihatsch/figures/")
 # for thr 75 need "sad","happy","crowded","empty"
 
-def plot_diffusion_decoded(sub, thr, concepts, figures_dir=figures_dir):
-    print(f"[INFO] Plotting diffusion images for sub {sub}, threshold {thr}")
+ 
+
+def plot_diffusion_decoded(subj, thr, concepts):
+    print(f"[INFO] Plotting diffusion images for subject {subj}, threshold {thr}")
     random.seed(42)
     N = 100
     c1, c2, c3, c4 = 1, 2, 3, 4
 
-    data_path = Path(f"/share/klab/labstudents/jmihatsch/processed_data/subj{sub:02d}")
-    fmri_test_data_path = data_path / f"laion_test_fmriavg_laiongeneral_sub{sub:02d}.npy"
-    test_fmri = np.load(fmri_test_data_path)
-    test_img_path = data_path / f"laion_test_stim_sub{sub:02d}.npy"
-    test_imgs = np.load(test_img_path)
+    test_fmri = np.load(processed_data_path(subj) / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
+    test_imgs = np.load(processed_data_path(subj) / f"laion_test_stim_sub{subj:02d}.npy")
 
     indices = sorted(random.sample(range(len(test_fmri)), 100))
     stims = test_imgs[indices]
 
     for pert in concepts:
-        diffusion_img_path = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/{pert}_{thr}")
-        plot_dir = figures_dir / f"diffusion_plots/subj{sub:02d}/{pert}_{thr}"
-        plot_dir = Path(plot_dir)
+        diffusion_img_path = subject_path(DIFFUSER_IMAGES, subj) / f"{pert}_{thr}"
+        plot_dir = subject_path(DIFFUSION_PLOTS,subj) / f"{pert}_{thr}"
         plot_dir.mkdir(parents=True,exist_ok=True )
 
-        print(f"[INFO] Plotting figure for sub {sub}, concept {pert}, and threshold {thr}")
+        print(f"[INFO] Plotting figure for sub {subj}, concept {pert}, and threshold {thr}")
         last_img = diffusion_img_path / "diffuser_899.png" 
 
         if not last_img.exists():
@@ -61,27 +59,25 @@ def plot_diffusion_decoded(sub, thr, concepts, figures_dir=figures_dir):
             width, height = Image.open(paths[4]).size
             border_rect = patches.Rectangle((0, 0), width, height, linewidth=border_width, edgecolor=border_color, fill=False)
             axs[5].add_patch(border_rect)
-            fig.savefig(plot_dir / f"sub{sub:02d}_{pert}_{thr}_stim{indices[stim]}.png", bbox_inches="tight")
+            fig.savefig(plot_dir / f"sub{subj:02d}_{pert}_{thr}_stim{indices[stim]}.png", bbox_inches="tight")
             plt.close(fig)
             print(f"[INFO] Saved Image {stim}")
             start += 9
 
 
-def plot_compare_original_vdvae_decoded(sub, thr, concepts, figures_dir=figures_dir):
-    print(f"[INFO] Plotting comparison figure for sub {sub}, threshold {thr}")
+def plot_compare_original_vdvae_decoded(subj, thr, concepts):
+    print(f"[INFO] Plotting comparison figure for sub {subj}, threshold {thr}")
     random.seed(42)
     N = 100
-    data_path = Path(f"/share/klab/labstudents/jmihatsch/processed_data/subj{sub:02d}")
-    test_fmri = np.load(data_path / f"laion_test_fmriavg_laiongeneral_sub{sub:02d}.npy")
-    test_imgs = np.load(data_path / f"laion_test_stim_sub{sub:02d}.npy")
+    test_fmri = np.load(processed_data_path(subj) / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
+    test_imgs = np.load(processed_data_path(subj) / f"laion_test_stim_sub{subj:02d}.npy")
     indices = sorted(random.sample(range(len(test_fmri)), 100))
     stims = test_imgs[indices]
     del test_fmri
 
-    diffusion_img_path = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/woman_{thr}")
-    vdvae_img_path = Path(f"/share/klab/labstudents/jmihatsch/vdvae_img/subj{sub:02d}/woman_{thr}")
-    plot_dir = figures_dir / f"comparison_plots/subj{sub:02d}/threshold_{thr}"
-    plot_dir = Path(plot_dir)
+    diffusion_img_path = subject_path(DIFFUSER_IMAGES, subj) / f"woman_{thr}"
+    vdvae_img_path = subject_path(VDVAE_IMAGES, subj) / f"woman_{thr}"
+    plot_dir = subject_path(COMPARISON_PLOTS, subj) / f"threshold_{thr}"
     plot_dir.mkdir(parents=True,exist_ok=True )
 
     start = 0
@@ -100,46 +96,44 @@ def plot_compare_original_vdvae_decoded(sub, thr, concepts, figures_dir=figures_
         for ax in axs:
             ax.axis("off")      
 
-        fig.savefig(plot_dir / f"sub{sub:02d}_{thr}_stim{indices[stim]}_comparison.png", bbox_inches="tight")
+        fig.savefig(plot_dir / f"sub{subj:02d}_{thr}_stim{indices[stim]}_comparison.png", bbox_inches="tight")
         plt.close(fig)
         print(f"[INFO] Saved Image {stim}")
 
 
-def get_alex_index(sub, stim, shared, ordered):
+def get_alex_index(subj, stim, shared, ordered):
     orig_idx_map = {label: i for i, label in enumerate(shared)}
     label = ordered[stim]
     orig_idx = orig_idx_map[label]
     return orig_idx
 
 
-def plot_compare_ours_with_alex(sub, thr, concepts):
-    print(f"[INFO] Plotting comparison with alex figure for sub {sub}, threshold {thr}")
+def plot_compare_ours_with_alex(subj, thr, concepts):
+    print(f"[INFO] Plotting comparison with alex figure for sub {subj}, threshold {thr}")
     random.seed(42)
     N = 100
 
-    save_path=Path(f"/share/klab/labstudents/jmihatsch/processed_data/subj{sub:02d}")
-    data_path = Path(f"/share/klab/labstudents/jmihatsch/processed_data/subj{sub:02d}")
-    test_fmri = np.load(data_path / f"laion_test_fmriavg_laiongeneral_sub{sub:02d}.npy")
-    test_imgs = np.load(data_path / f"laion_test_stim_sub{sub:02d}.npy")
+    processed_data = processed_data_path(subj)
+    test_fmri = np.load(processed_data_path(subj) / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
+    test_imgs = np.load(processed_data_path(subj) / f"laion_test_stim_sub{subj:02d}.npy")
     indices = sorted(random.sample(range(len(test_fmri)), 100))
     stims = test_imgs[indices]
     del test_fmri
 
-    with open(save_path / "labels_shared.pkl", "rb") as f:
+    with open(processed_data / "labels_shared.pkl", "rb") as f:
         data = pickle.load(f)
     shared = data["originalorder"]
     ordered = data["ordered"]
 
-    img_alex_path = Path(f"/share/klab/alkroner/brain-diffuser/data/nsddata_stimuli/test_images/subj{sub:02d}")
-    vdvae_alex_path = Path(f"/share/klab/alkroner/brain-diffuser/results/vdvae/subj{sub:02d}")
-    diff_alex_path = Path(f"/share/klab/alkroner/brain-diffuser/results/versatile_diffusion/subj{sub:02d}")
+    img_alex_path = Path(f"/share/klab/alkroner/brain-diffuser/data/nsddata_stimuli/test_images/subj{subj:02d}")
+    vdvae_alex_path = Path(f"/share/klab/alkroner/brain-diffuser/results/vdvae/subj{subj:02d}")
+    diff_alex_path = Path(f"/share/klab/alkroner/brain-diffuser/results/versatile_diffusion/subj{subj:02d}")
 
 
-    diffusion_img_path = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/woman_{thr}")
-    vdvae_img_path = Path(f"/share/klab/labstudents/jmihatsch/vdvae_img/subj{sub:02d}/woman_{thr}")
+    diffusion_img_path = subject_path(DIFFUSER_IMAGES, subj) / f"woman_{thr}"
+    vdvae_img_path = subject_path(VDVAE_IMAGES, subj) / f"woman_{thr}"
 
-    plot_dir = figures_dir / f"comparison_plots_alex/subj{sub:02d}/threshold_{thr}"
-    plot_dir = Path(plot_dir)
+    plot_dir = subject_path(COMPARISON_PLOTS_ALEX, subj) / f"threshold_{thr}"
     plot_dir.mkdir(parents=True,exist_ok=True )
 
     start = 0
@@ -148,7 +142,7 @@ def plot_compare_ours_with_alex(sub, thr, concepts):
         vdvae_img = vdvae_img_path / f"vdvae_image_{img}.png"
         diffuser_img = diffusion_img_path / f"diffuser_{img}.png"
 
-        orig_idx = get_alex_index(sub=sub, stim=indices[stim], shared=shared, ordered=ordered)
+        orig_idx = get_alex_index(sub=subj, stim=indices[stim], shared=shared, ordered=ordered)
 
         orig_img_alex =  img_alex_path / f"{orig_idx}.png"
         vdvae_img_alex = vdvae_alex_path / f"{orig_idx}.png"
@@ -165,36 +159,32 @@ def plot_compare_ours_with_alex(sub, thr, concepts):
         axs[1, 1].imshow(Image.open(vdvae_img_alex))
         axs[1, 2].imshow(Image.open(diffuser_img_alex))
         #row labels
-        axs[0,0].set_ylabel("Ours", fontsize=14, rotation=90)
-        axs[1,0].set_ylabel("Alex", fontsize=14, rotation=90)
+        axs[0,0].set_ylabel("Algebra Set", fontsize=14, rotation=90)
+        axs[1,0].set_ylabel("Test Set", fontsize=14, rotation=90)
         for ax in axs.ravel():
             ax.set_xticks([])
             ax.set_yticks([])
             for spine in ax.spines.values():
                 spine.set_visible(False)
 
-        fig.savefig(plot_dir / f"sub{sub:02d}_{thr}_stim{indices[stim]}_comparison.png", bbox_inches="tight")
+        fig.savefig(plot_dir / f"sub{subj:02d}_{thr}_stim{indices[stim]}_comparison.png", bbox_inches="tight")
         plt.close(fig)
         print(f"[INFO] Saved Image {stim}")
 
 
-def plot_star(sub, thr, concepts):
-    print(f"[Info] Plotting star plot for subject {sub}, threshold {thr}")
+def plot_star(subj, thr, concepts):
+    print(f"[Info] Plotting star plot for subject {subj}, threshold {thr}")
     random.seed(42)
     N = 100
     c1, c2, c3, c4 = 1, 2, 3, 4
 
-    data_path = Path(f"/share/klab/labstudents/jmihatsch/processed_data/subj{sub:02d}")
-    fmri_test_data_path = data_path / f"laion_test_fmriavg_laiongeneral_sub{sub:02d}.npy"
-    test_fmri = np.load(fmri_test_data_path)
-    test_img_path = data_path / f"laion_test_stim_sub{sub:02d}.npy"
-    test_imgs = np.load(test_img_path)
+    test_fmri = np.load(processed_data_path(subj) / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy")
+    test_imgs = np.load(processed_data_path(subj) / f"laion_test_stim_sub{subj:02d}.npy")
 
     indices = sorted(random.sample(range(len(test_fmri)), 100))
     stims = test_imgs[indices]
 
-    plot_dir = figures_dir / f"star_plots/subj{sub:02d}/threshold_{thr}"
-    plot_dir = Path(plot_dir)
+    plot_dir = subject_path(STAR_PLOTS, subj) / f"threshold_{thr}"
     plot_dir.mkdir(parents=True,exist_ok=True )
     
     for stim in range(N):
@@ -203,7 +193,7 @@ def plot_star(sub, thr, concepts):
         start = stim*9
         for pert in concepts:
         
-            diffusion_img_path = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/{pert}_{thr}")
+            diffusion_img_path = subject_path(DIFFUSER_IMAGES, subj) / f"{pert}_{thr}"
 
             paths = []
             for i in range(start, start + 9):
@@ -270,12 +260,21 @@ def plot_star(sub, thr, concepts):
         ax.set_xlim(-2, 2)
         ax.set_ylim(-2, 2)
         ax.axis('off')
-        plt.savefig(plot_dir / f"sub{sub:02d}_{pert}_{thr}_stim{indices[stim]}_starplot.png", bbox_inches="tight")
+        plt.savefig(plot_dir / f"sub{subj:02d}_stim{indices[stim]}_starplot.png", bbox_inches="tight")
         print(f"[INFO] Saved Image {stim}")
-        
 
-plot_diffusion_decoded(sub=sub, thr=thr, concepts=concepts)
-plot_compare_original_vdvae_decoded(sub=sub, thr=thr, concepts=concepts)
-plot_compare_ours_with_alex(sub=sub, thr=thr, concepts=concepts)
-#plot_star(sub=sub, thr=thr, concepts=concepts)
 
+def plot_all(subj):
+    for thr in (0, 25, 50, 75, 90, 95):
+        plot_diffusion_decoded(subj=subj, thr=thr, concepts=concepts)
+        plot_compare_original_vdvae_decoded(subj=subj, thr=thr, concepts=concepts)
+        plot_compare_ours_with_alex(subj=1, thr=thr, concepts=concepts)
+        plot_star(subj=subj, thr=thr, concepts=concepts)
+
+#for thr in (0, 25, 50, 75, 90, 95):  
+#plot_diffusion_decoded(sub=1, thr=50, concepts=concepts)
+#plot_compare_original_vdvae_decoded(sub=1, thr=50, concepts=concepts)
+#plot_compare_ours_with_alex(subj=1, thr=50, concepts=concepts)
+#plot_star(sub=1, thr=50, concepts=concepts)
+
+#python3 revision_plot.py

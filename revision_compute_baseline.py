@@ -6,15 +6,15 @@ import torch
 import tqdm
 from PIL import Image
 from transformers import AutoProcessor, CLIPModel
+from config import *
 
-sub = 1
+subj = 1
 N = 100
 base_thr = 50
-data_path = Path("/share/klab/labstudents/jmihatsch")
 difference_pairs=[("man","woman"),("indoor scene","outdoor scene"),("day","night"),("summer","winter"),("sad","happy"), ("crowded","empty")]  #,("cat","dog"), ("still", "moving"), ("left","right"), ("top","down"), 
 unrolled_concepts=  [item for pair in difference_pairs for item in pair]
 # from encode images
-train_img_embeds = torch.load(data_path / f"embeds/image_embeds_subject-{sub:02d}.pt").float().cpu()
+train_img_embeds = torch.load(EMBEDS_PATH / f"image_embeds_subject-{subj:02d}.pt").float().cpu()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 discriminator = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
@@ -25,7 +25,7 @@ random.seed(42)
 baselines = {}
 with torch.no_grad():
     for pair in tqdm.tqdm(unrolled_concepts):
-        algebra_dir = Path(f"/share/klab/labstudents/jmihatsch/diffuser_img/subj{sub:02d}/{pair}_{base_thr}")
+        algebra_dir = subject_path(FMRI_ALGEBRA_PATH, subj) / f"{pair}_{base_thr}"
         baselines[pair] = dict()
 
         original_img = [Image.open(algebra_dir / f"diffuser_{9 * k + 4}.png") for k in range(N)]
@@ -65,5 +65,5 @@ for key in keys:
         values.append(baselines[pair][key].numpy())   # one array per concept
     baselines_aggregated[key] = np.concatenate(values)   # all concepts in one array
 
-with open(data_path / "similarity_data/baselines.pkl", "wb") as f:
+with open(SIMILARITY_DATA_PATH / "baselines.pkl", "wb") as f:
     pickle.dump(baselines_aggregated, f)

@@ -4,7 +4,7 @@ import os
 from os.path import join as opj
 import pickle
 from pathlib import Path
-
+from config import *
 
 #def plot_similarity_original_image()
 
@@ -17,11 +17,11 @@ def plot_similarity_concept(subjs, thrs, version):
 
     v = f"v{version}"
 
-    with open(f"/share/klab/labstudents/jmihatsch/similarity_data/similarity_{v}.pkl", "rb") as f:
+    with open(SIMILARITY_DATA_PATH / f"similarity_{v}.pkl", "rb") as f:
         all_results_sub = pickle.load(f)
 
 
-    with open("/share/klab/labstudents/jmihatsch/similarity_data/baselines.pkl", "rb") as f:
+    with open("SIMILARITY_DATA_PATH / baselines.pkl", "rb") as f:
         baselines_aggregated = pickle.load(f)
 
     # Define the number of columns and rows for subplots
@@ -88,16 +88,12 @@ def plot_similarity_concept(subjs, thrs, version):
     axs[-1, 1].set_xlabel("Scaling Value")
     axs[-1, 2].set_xlabel("Scaling Value")
 
-    figures_dir = Path(f"/share/klab/labstudents/jmihatsch/figures/")
-    out_dir = figures_dir / "similarity_plots"
-    out_dir.mkdir(parents=True,exist_ok=True )
-
     plt.tight_layout(rect=[0, 0, 1, 0.97])  # Adjust layout to make room for the main title
-    plt.savefig(out_dir / f"group_decoded_perturbed_and_concepts_{v}.png")
+    plt.savefig(SIMILARITY_ANALYSIS_PLOTS / f"group_decoded_perturbed_and_concepts_{v}.png")
 
 
 plot_similarity_concept(
-    subjs = [1],
-    thrs = [50], #[0, 25, 50, 75, 90, 95]
-    version=1
+    subjs = [1,3,5,6,7],
+    thrs = [0, 25, 50, 75, 90, 95],
+    version=2
 )

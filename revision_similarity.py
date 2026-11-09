@@ -25,9 +25,7 @@ N = 100
 subjs = [1]  #,"subj03","subj05","subj06", "subj07"
 difference_pairs=[("man","woman"),("indoor scene","outdoor scene"),("day","night"),("summer","winter"),("sad","happy"), ("crowded","empty")]  #,("cat","dog"), ("still", "moving"), ("left","right"), ("top","down"), 
 unrolled_concepts=  [item for pair in difference_pairs for item in pair]
-thrs = [50]  #[0, 25, 50, 75, 90, 95]
-out_dir = Path(f"/share/klab/labstudents/jmihatsch/similarity_data")
-out_dir.mkdir(parents=True,exist_ok=True )
+thrs = [0, 25, 50, 75, 90, 95]
 
 print("v1")
 
@@ -116,7 +114,7 @@ for sub in subjs:
                     
     all_results_subv1[sub] = all_results
 
-with open(out_dir / "similarity_v1.pkl", "wb") as f:
+with open(SIMILARITY_DATA_PATH / "similarity_v1.pkl", "wb") as f:
     pickle.dump(all_results_subv1, f)
 
 
@@ -221,5 +219,5 @@ for sub in subjs:
 
                     
     all_results_subv2[sub] = all_results
-with open(out_dir / "similarity_v2.pkl", "wb") as f:
+with open(SIMILARITY_DATA_PATH / "similarity_v2.pkl", "wb") as f:
     pickle.dump(all_results_subv2, f)

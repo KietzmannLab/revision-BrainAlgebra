@@ -7,7 +7,7 @@ ___
 6. vdvae.py
 7. vdvae_reconstruct_images.py
 8. diffuser_reconstruct_images.py
-9. revision_similarity
+9. revision_similarity.py
 10. revision_compute_baseline.py
 11. revision_plot_similarity.py
 
@@ -17,6 +17,9 @@ or
 
 if all concepts
 9/6. revision_plot.py
+10/7. revision_plot_brain.py
 -------------------------------
-Note: 4 and 5 are interchangeable
 
+
+#salloc -p klab-gpu -x klab-8 -n 1 -c 1 --mem 300G --gres=gpu:1 -t 04:00:00 srun --pty bash
+#salloc -p klab-gpu -x klab-7,klab-8 -n 1 -c 4 --mem 32G --gres=gpu:1 -t 04:00:00 srun --pty bash

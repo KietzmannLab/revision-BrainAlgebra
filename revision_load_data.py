@@ -5,6 +5,7 @@ from laion_fmri.subject import load_subject
 from pathlib import Path
 from skimage.transform import resize
 from datetime import datetime
+from config import *
 
 
 '''
@@ -18,11 +19,6 @@ image array are extracted per trial, resized to fit BrainAlgebra data, and saved
 #set up directories
 DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 dataset_initialize(DATA_DIR)
-
-project = PROJ_ROOT = Path(__file__).resolve().parents[1]
-username = project.name
-data_path = Path(f"/share/klab/labstudents/{username}")
-OUT_DIR = data_path / "processed_data"
 
 def resize_images(img_all):   #img_all = (trial, dim, dim, rgb)
     new_height = 425
@@ -66,8 +62,6 @@ def save_avg_fmri_data(subj=1):
     #set up subdirectory inside loop 
     starttime = datetime.now()
     print("[INFO] Start Time:", starttime)
-    SUB_DIR = OUT_DIR / f"subj{subj:02d}"
-    SUB_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load betas and trial info as usual (see laion_fmri_package/load).
     sub = load_subject(f"sub-{subj:02d}")
@@ -100,7 +94,7 @@ def save_avg_fmri_data(subj=1):
 
     #save a np array for the fmri averaged betas and one for the png filenames (maybe change later to already include the stimulus)
     fmri_avg_train = avg_betas_train.to_numpy()
-    np.save(SUB_DIR / f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg_train)
+    np.save(processed_data_path(subj) / f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg_train)
     print("[INFO] Saved averaged fMRI activity for train data")
 
     unique_dictionary, shared_dictionary = make_img_dictionaries(sub=sub, sessions=sessions, trials_info=trials_info)
@@ -114,7 +108,7 @@ def save_avg_fmri_data(subj=1):
     img_data = np.stack(img_data, axis = 0)
     print("[INFO] Aligned image data to fMRI trial order")
 
-    np.save(SUB_DIR / f"laion_train_stim_sub{subj:02d}.npy", img_data)
+    np.save(processed_data_path(subj) / f"laion_train_stim_sub{subj:02d}.npy", img_data)
     print("[INFO] Saved image data for train data")
 
     #test set
@@ -137,7 +131,7 @@ def save_avg_fmri_data(subj=1):
     print(f"[INFO] Averaged beta values for test data, trials: {len(avg_betas_test)}")
 
     fmri_avg_test = avg_betas_test.to_numpy()
-    np.save(SUB_DIR / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg_test)
+    np.save(processed_data_path(subj) / f"laion_test_fmriavg_laiongeneral_sub{subj:02d}.npy", fmri_avg_test)
     print("[INFO] Saved averaged fMRI activity for test data")
 
     labels_order = avg_betas_test.index.to_numpy()
@@ -149,7 +143,7 @@ def save_avg_fmri_data(subj=1):
     img_data = np.stack(img_data, axis = 0)
     print("[INFO] Aligned image data to fMRI trial order")
 
-    np.save(SUB_DIR / f"laion_test_stim_sub{subj:02d}.npy", img_data)
+    np.save(processed_data_path(subj) / f"laion_test_stim_sub{subj:02d}.npy", img_data)
     print("[INFO] Saved image data for test data")
     endtime = datetime.now()
     print("End Time:", endtime)
