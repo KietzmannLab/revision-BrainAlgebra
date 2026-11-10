@@ -1,2 +1,5 @@
 /revision_sbatch_output
 
+__pycache__/
+
+.ruff_cache/

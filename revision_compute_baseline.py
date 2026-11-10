@@ -14,6 +14,7 @@ base_thr = 50
 difference_pairs=[("man","woman"),("indoor scene","outdoor scene"),("day","night"),("summer","winter"),("sad","happy"), ("crowded","empty")]  #,("cat","dog"), ("still", "moving"), ("left","right"), ("top","down"), 
 unrolled_concepts=  [item for pair in difference_pairs for item in pair]
 # from encode images
+EMBEDS_PATH.mkdir(parents=True, exist_ok=True)
 train_img_embeds = torch.load(EMBEDS_PATH / f"image_embeds_subject-{subj:02d}.pt").float().cpu()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -25,7 +26,7 @@ random.seed(42)
 baselines = {}
 with torch.no_grad():
     for pair in tqdm.tqdm(unrolled_concepts):
-        algebra_dir = subject_path(FMRI_ALGEBRA_PATH, subj) / f"{pair}_{base_thr}"
+        algebra_dir = subject_path(DIFFUSER_IMAGES, subj) / f"{pair}_{base_thr}"
         baselines[pair] = dict()
 
         original_img = [Image.open(algebra_dir / f"diffuser_{9 * k + 4}.png") for k in range(N)]

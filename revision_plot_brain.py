@@ -32,8 +32,6 @@ fmri_test_data = test_fmri[indices]
 
 print(test_fmri.mean(0)[:5], test_fmri.std(0)[:5])
 
-raise SystemExit
-
 DATA_DIR = "/share/klab/datasets/optimized_datasets/laion_fmri_data"
 dataset_initialize(DATA_DIR)
 
@@ -59,7 +57,12 @@ data = roi
 vox_mm = sub.get_voxel_coordinates()
 vox = np.round(nib.affines.apply_affine(np.linalg.inv(roi_img.affine), vox_mm)).astype(int)
 
-base_pattern = fmri_test_data[0]
+train_fmri = np.load(processed_data_path(subj) / f"laion_train_fmriavg_laiongeneral_sub{subj:02d}.npy")
+mu = train_fmri.mean(0)
+sd = train_fmri.std(0)  + 1e-8 
+del train_fmri
+
+base_pattern = (fmri_test_data[0] - mu) / sd
 
 base_map=np.zeros(data.shape)
 
@@ -115,13 +118,15 @@ for concept in tqdm.tqdm(concepts):
     nib.save(final_sum,opj(tgt_dir,f"FINAL_{concept}_thr_{90}.nii.gz"))
 
 
-    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"{concept}_thr_{90}.nii.gz"),title=concept)
+    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"{concept}_thr_{90}.nii.gz"),title=concept, plot_abs=False, cmap = "cold_white_hot")
     display.savefig(opj(plot_dir, f"pertubation_img_{concept}.png"))
 
     display.close()
 
-    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"FINAL_{concept}_thr_{90}.nii.gz"),title=concept)
+    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"FINAL_{concept}_thr_{90}.nii.gz"),title=concept, plot_abs=False, cmap = "cold_white_hot")
     display.savefig(opj(plot_dir, f"FINAL_img_{concept}.png"))
 
     display.close()
+
+print("done")
 
