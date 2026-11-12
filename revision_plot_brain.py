@@ -117,13 +117,15 @@ for concept in tqdm.tqdm(concepts):
 
     nib.save(final_sum,opj(tgt_dir,f"FINAL_{concept}_thr_{90}.nii.gz"))
 
+    vmin = -1.2
+    vmax = 1.2
 
-    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"{concept}_thr_{90}.nii.gz"),title=concept, plot_abs=False, cmap = "cold_white_hot")
+    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"{concept}_thr_{90}.nii.gz"),title=concept, plot_abs=False, cmap = "cold_white_hot", vmin=vmin, vmax=vmax)
     display.savefig(opj(plot_dir, f"pertubation_img_{concept}.png"))
 
     display.close()
 
-    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"FINAL_{concept}_thr_{90}.nii.gz"),title=concept, plot_abs=False, cmap = "cold_white_hot")
+    display = nilearn.plotting.plot_glass_brain(opj(tgt_dir,f"FINAL_{concept}_thr_{90}.nii.gz"),title=concept,plot_abs=False, cmap = "cold_white_hot", vmin=vmin, vmax=vmax)
     display.savefig(opj(plot_dir, f"FINAL_img_{concept}.png"))
 
     display.close()

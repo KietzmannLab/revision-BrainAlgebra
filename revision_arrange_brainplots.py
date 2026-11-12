@@ -23,7 +23,7 @@ from config import *
 subj=1
 plot_dir = subject_path(ROI_PLOTS, subj)
 
-concepts = ["man","woman","indoor scene","outdoor scene","day","night","summer","winter","sad","happy", "crowded","empty"]
+concepts = ["man","woman","crowded","empty", "summer","winter","happy" ,"sad", "indoor scene","outdoor scene","day","night"]
 
 fig, axes = plt.subplots(6, 2, figsize=(12, 15))
 axes = axes.ravel(order="F")
